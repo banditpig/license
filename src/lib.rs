@@ -1,9 +1,11 @@
 #![allow(dead_code)]
+
 mod license;
 
 #[cfg(test)]
 mod tests {
     use chrono::NaiveDate;
+
     use crate::license::License;
 
     #[test]
@@ -17,11 +19,12 @@ mod tests {
             .with_feature("remote connect".to_string(), "yes".to_string())
             .with_expiry(naive_date)
             .with_max_users(10)
+            .with_keyphrase("new license being made".to_string())
+            .sign()
             .to_json();
 
         println!("{:?}", lic);
         let lic2 = License::from_json(&lic);
         println!("{:?}", lic2);
-
     }
 }
