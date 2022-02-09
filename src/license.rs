@@ -125,7 +125,6 @@ impl License {
             Err(why) => panic!("couldn't create {}: {}", path.display(), why),
             Ok(file) => file,
         };
-
         match file.write_all(self.all_to_json().as_bytes()) {
             Err(why) => panic!("couldn't write to {}: {}", path.display(), why),
             Ok(_) => println!("successfully wrote to {}", path.display()),
