@@ -33,11 +33,6 @@ pub struct UserData {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde_with::serde_as]
 pub struct License {
-    // id: String,
-    // pub expires: NaiveDate,
-    // pub features: HashMap<String, String>,
-    // pub max_users: usize,
-    // keyphrase: String,
     user_data: UserData,
     signing_data: SigningData,
 }
