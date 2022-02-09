@@ -1,5 +1,9 @@
 use std::collections::HashMap;
+use std::fs;
+use std::fs::File;
+use std::io::Write;
 use std::panic::set_hook;
+use std::path::Path;
 
 use chrono::NaiveDate;
 use rand::rngs::OsRng;
@@ -64,9 +68,6 @@ impl UserData {
 
 impl License {
     pub fn new() -> License {
-        // set_hook(Box::new(|info| {
-        //     println!("{}", info.to_string());
-        // }));
         set_hook(Box::new(|info| {
             println!("{:?}", info.to_string());
         }));
@@ -86,7 +87,7 @@ impl License {
         let naive_date = NaiveDate::parse_from_str(exp, "%Y-%m-%d");
         match naive_date {
             Ok(d) => self.user_data.expires = d,
-            Err(_) => panic!("Error parsing date"),
+            Err(_) => panic!("Error parsing date {}", exp),
         }
 
         self
@@ -104,20 +105,19 @@ impl License {
         self
     }
     pub fn all_to_json(&self) -> String {
-        serde_json::to_string(&self).unwrap()
+        serde_json::to_string_pretty(&self).unwrap()
     }
     pub fn user_data_to_json(&self) -> String {
         serde_json::to_string(&self.user_data).unwrap()
     }
-    pub fn user_data_from_json(json: &str) -> UserData {
+    pub fn user_data_from_json(&self, json: &str) -> UserData {
         serde_json::from_str(json).expect("Unable to make UserData from supplied json.")
     }
-    pub fn all_from_json(json: &str) -> License {
+    pub fn all_from_json(&self, json: &str) -> License {
         serde_json::from_str(json).expect("Unable to make License from supplied json.")
     }
     pub fn sign(mut self) -> License {
         let keypair = Keypair::generate_with(OsRng);
-
         let message = self.user_data_to_json();
         let context = signing_context(self.user_data.keyphrase.as_bytes());
         let signature = keypair.sign(context.bytes(message.as_bytes()));
@@ -125,5 +125,21 @@ impl License {
         self.signing_data.sig_bytes = signature.to_bytes().to_vec();
         self.signing_data.pub_key = keypair.public.to_bytes().to_vec();
         self
+    }
+    pub fn save_to_file(&self, path: &str) {
+        let path = Path::new(path);
+        let mut file = match File::create(&path) {
+            Err(why) => panic!("couldn't create {}: {}", path.display(), why),
+            Ok(file) => file,
+        };
+
+        match file.write_all(self.all_to_json().as_bytes()) {
+            Err(why) => panic!("couldn't write to {}: {}", path.display(), why),
+            Ok(_) => println!("successfully wrote to {}", path.display()),
+        }
+    }
+    pub fn from_file(&self, path: &str) -> License {
+        let json = fs::read_to_string(path).expect("Problem reading file ");
+        self.all_from_json(json.as_str())
     }
 }
