@@ -5,11 +5,12 @@ mod license;
 #[cfg(test)]
 mod tests {
     use crate::license::License;
+
     #[test]
     fn to_from_file() {
         let lic = make_license();
         lic.save_to_file("lic.txt");
-        let lic2 = lic.from_file("lic.txt");
+        let lic2 = License::from_file("lic.txt");
         assert_eq!(lic, lic2);
     }
 
@@ -17,7 +18,7 @@ mod tests {
     fn to_from_json() {
         let lic = make_license();
         let lic_json = lic.all_to_json();
-        let lic2 = lic.all_from_json(&lic_json);
+        let lic2 = License::all_from_json(&lic_json);
 
         println!("{:?}", lic2.all_to_json());
         assert_eq!(lic, lic2);

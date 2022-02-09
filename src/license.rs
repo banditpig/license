@@ -105,10 +105,8 @@ impl License {
     pub fn user_data_to_json(&self) -> String {
         serde_json::to_string(&self.user_data).unwrap()
     }
-    pub fn user_data_from_json(&self, json: &str) -> UserData {
-        serde_json::from_str(json).expect("Unable to make UserData from supplied json.")
-    }
-    pub fn all_from_json(&self, json: &str) -> License {
+
+    pub fn all_from_json(json: &str) -> License {
         serde_json::from_str(json).expect("Unable to make License from supplied json.")
     }
     pub fn sign(mut self) -> License {
@@ -133,8 +131,8 @@ impl License {
             Ok(_) => println!("successfully wrote to {}", path.display()),
         }
     }
-    pub fn from_file(&self, path: &str) -> License {
+    pub fn from_file(path: &str) -> License {
         let json = fs::read_to_string(path).expect("Problem reading file ");
-        self.all_from_json(json.as_str())
+        Self::all_from_json(json.as_str())
     }
 }
