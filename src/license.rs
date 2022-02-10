@@ -10,8 +10,6 @@ use schnorrkel::{signing_context, Keypair, PublicKey, Signature};
 use serde::{Deserialize, Serialize, Serializer};
 use uuid::Uuid;
 
-//use std::panic::set_hook;
-
 fn ordered_map<S>(value: &HashMap<String, String>, serializer: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
@@ -89,7 +87,6 @@ impl License {
             }
             Err(_) => panic!("Error parsing date {}", exp),
         }
-
         self
     }
     pub fn with_id(mut self, id: String) -> License {
@@ -115,8 +112,6 @@ impl License {
         serde_json::from_str(json).expect("Unable to make License from supplied json.")
     }
     pub fn check_license(&self) -> bool {
-        //verify
-        //then check date not expired
         if !self.verify() {
             return false;
         }
@@ -126,7 +121,6 @@ impl License {
     pub fn verify(&self) -> bool {
         let byt_arr_sig: &[u8] = &self.signing_data.sig_bytes;
         let signature = Signature::from_bytes(byt_arr_sig).unwrap();
-
         let byt_arr_pub_key: &[u8] = &self.signing_data.pub_key;
 
         let public_key = PublicKey::from_bytes(byt_arr_pub_key).unwrap();
