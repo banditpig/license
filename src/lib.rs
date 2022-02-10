@@ -5,13 +5,60 @@ mod license;
 #[cfg(test)]
 mod tests {
     use crate::license::License;
+    use std::fs;
 
     #[test]
     fn to_from_file() {
         let lic = make_license();
-        lic.save_to_file("lic.txt");
-        let lic2 = License::from_file("lic.txt");
+        lic.save_to_file("lic1.txt");
+        let lic2 = License::from_file("lic1.txt");
         assert_eq!(lic, lic2);
+        let _ = fs::remove_file("lic1.txt");
+    }
+
+    #[test]
+    fn check_license_expired() {
+        let lic = make_early_license();
+        assert_eq!(lic.check_license(), false);
+    }
+
+    #[test]
+    fn check_license_not_expired() {
+        let lic = make_license();
+        assert_eq!(lic.check_license(), true);
+    }
+    #[test]
+    fn check_license_expired_from_file() {
+        let lic = make_early_license();
+        lic.save_to_file("early_lic.txt");
+        let lic2 = License::from_file("early_lic.txt");
+        assert_eq!(lic2.check_license(), false);
+        let _ = fs::remove_file("early_lic.txt");
+    }
+
+    #[test]
+    fn check_license_not_expired_from_file() {
+        let lic = make_license();
+        lic.save_to_file("lic2.txt");
+        let lic2 = License::from_file("lic2.txt");
+        assert_eq!(lic2.check_license(), true);
+        let _ = fs::remove_file("lic2.txt");
+    }
+
+    #[test]
+    fn verify_from_file() {
+        let lic1 = make_license();
+        lic1.save_to_file("lic3.txt");
+
+        let lic = License::from_file("lic3.txt");
+        assert_eq!(lic.verify(), true);
+        let _ = fs::remove_file("lic3.txt");
+    }
+
+    #[test]
+    fn verify() {
+        let lic = make_license();
+        assert_eq!(lic.verify(), true);
     }
 
     #[test]
@@ -19,8 +66,6 @@ mod tests {
         let lic = make_license();
         let lic_json = lic.all_to_json();
         let lic2 = License::all_from_json(&lic_json);
-
-        println!("{:?}", lic2.all_to_json());
         assert_eq!(lic, lic2);
     }
 
@@ -31,6 +76,18 @@ mod tests {
             .with_feature("admin".to_string(), "fred, joe".to_string())
             .with_feature("remote connect".to_string(), "yes".to_string())
             .with_expiry("2024-02-28")
+            .with_max_users(10)
+            .with_keyphrase("new license being made".to_string())
+            .sign()
+    }
+
+    fn make_early_license() -> License {
+        License::new()
+            .with_feature("debug".to_string(), "parts1".to_string())
+            .with_feature("emails".to_string(), "email1, email2".to_string())
+            .with_feature("admin".to_string(), "fred, joe".to_string())
+            .with_feature("remote connect".to_string(), "yes".to_string())
+            .with_expiry("2019-02-28")
             .with_max_users(10)
             .with_keyphrase("new license being made".to_string())
             .sign()
