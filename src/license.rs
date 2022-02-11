@@ -28,7 +28,7 @@ impl UserData {
             expires: MIN_DATE.and_hms(0, 0, 0),
             features: HashMap::new(),
             max_users: 0,
-            keyphrase: "".to_string(),
+            key_phrase: "".to_string(),
         }
     }
 }
@@ -41,33 +41,33 @@ impl License {
         }
     }
 
-    pub fn with_feature(mut self, key: String, val: String) -> License {
+    pub fn with_feature(mut self, key: String, val: String) -> Result<License, LicenseError> {
         self.user_data.features.insert(key, val);
-        self
+        Ok(self)
     }
 
-    pub fn with_expiry(mut self, exp: &str) -> License {
+    pub fn with_expiry(mut self, exp: &str) -> Result<License, LicenseError> {
         let naive_date = NaiveDate::parse_from_str(exp, "%Y-%m-%d");
         match naive_date {
             Ok(date) => {
                 let from_utc = DateTime::<Utc>::from_utc(date.and_hms(0, 0, 0), Utc);
                 self.user_data.expires = from_utc;
             }
-            Err(_) => panic!("Error parsing date {}", exp),
+            Err(msg) => return Err(LicenseError::DateFormatError(msg.to_string())),
         }
-        self
+        Ok(self)
     }
-    pub fn with_id(mut self, id: String) -> License {
+    pub fn with_id(mut self, id: String) -> Result<License, LicenseError> {
         self.user_data.id = id;
-        self
+        Ok(self)
     }
-    pub fn with_max_users(mut self, max_users: usize) -> License {
+    pub fn with_max_users(mut self, max_users: usize) -> Result<License, LicenseError> {
         self.user_data.max_users = max_users;
-        self
+        Ok(self)
     }
-    pub fn with_keyphrase(mut self, keyphrase: String) -> License {
-        self.user_data.keyphrase = keyphrase;
-        self
+    pub fn with_keyphrase(mut self, keyphrase: String) -> Result<License, LicenseError> {
+        self.user_data.key_phrase = keyphrase;
+        Ok(self)
     }
     pub fn all_to_json(&self) -> String {
         serde_json::to_string_pretty(&self).unwrap()
@@ -92,7 +92,7 @@ impl License {
         let byt_arr_pub_key: &[u8] = &self.signing_data.pub_key;
 
         let public_key = PublicKey::from_bytes(byt_arr_pub_key).unwrap();
-        let context = signing_context(self.user_data.keyphrase.as_bytes());
+        let context = signing_context(self.user_data.key_phrase.as_bytes());
         let user_data = self.user_data_to_json();
         let res = public_key.verify(context.bytes(user_data.as_bytes()), &signature);
         res.is_ok()
@@ -100,7 +100,7 @@ impl License {
     pub fn sign(mut self) -> License {
         let keypair = Keypair::generate_with(OsRng);
         let user_data = self.user_data_to_json();
-        let context = signing_context(self.user_data.keyphrase.as_bytes());
+        let context = signing_context(self.user_data.key_phrase.as_bytes());
         let signature = keypair.sign(context.bytes(user_data.as_bytes()));
 
         self.signing_data.sig_bytes = signature.to_bytes().to_vec();

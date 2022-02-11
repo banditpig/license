@@ -1,6 +1,5 @@
 use std::collections::{BTreeMap, HashMap};
 
-//
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize, Serializer};
 
@@ -27,7 +26,7 @@ pub struct UserData {
     #[serde(serialize_with = "ordered_map")]
     pub features: HashMap<String, String>,
     pub max_users: usize,
-    pub keyphrase: String,
+    pub key_phrase: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
@@ -35,4 +34,9 @@ pub struct UserData {
 pub struct License {
     pub user_data: UserData,
     pub signing_data: SigningData,
+}
+
+#[derive(std::fmt::Debug, Clone)]
+pub enum LicenseError {
+    DateFormatError(String),
 }
