@@ -102,7 +102,7 @@ impl License {
         self
     }
     pub fn all_to_json(&self) -> String {
-        serde_json::to_string(&self).unwrap()
+        serde_json::to_string_pretty(&self).unwrap()
     }
     pub fn user_data_to_json(&self) -> String {
         serde_json::to_string(&self.user_data).unwrap()
@@ -139,6 +139,7 @@ impl License {
         self.signing_data.pub_key = keypair.public.to_bytes().to_vec();
         self
     }
+
     pub fn save_to_file(&self, path: &str) {
         let path = Path::new(path);
         let mut file = match File::create(&path) {

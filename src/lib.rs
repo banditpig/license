@@ -6,6 +6,8 @@ mod license;
 mod tests {
     use crate::license::License;
     use std::fs;
+    use std::fs::File;
+    use std::io::{BufRead, BufReader, Write};
 
     #[test]
     fn to_from_file() {
@@ -27,6 +29,7 @@ mod tests {
         let lic = make_license();
         assert_eq!(lic.check_license(), true);
     }
+
     #[test]
     fn check_license_expired_from_file() {
         let lic = make_early_license();
@@ -53,6 +56,56 @@ mod tests {
         let lic = License::from_file("lic3.txt");
         assert_eq!(lic.verify(), true);
         let _ = fs::remove_file("lic3.txt");
+    }
+
+    #[test]
+    fn save_to_file_edit_then_verify() {
+        let lic = make_license();
+        lic.save_to_file("licEdit.txt");
+
+        let file = File::open("licEdit.txt").unwrap();
+        let reader = BufReader::new(file);
+
+        let mut writer = &File::create("temp1.txt").unwrap();
+        for line in reader.lines() {
+            let txt = line.unwrap();
+
+            if !txt.contains("admin") {
+                writer.write_all(txt.as_bytes()).unwrap();
+            }
+        }
+        writer.flush().unwrap();
+
+        fs::rename("temp1.txt", "licEdit.txt").unwrap();
+
+        let lic_loaded = License::from_file("licEdit.txt");
+        assert_eq!(lic_loaded.verify(), false);
+        let _ = fs::remove_file("licEdit.txt");
+    }
+
+    #[test]
+    fn save_to_file_not_pretty_json_then_verify() {
+        //This test to check that losing pretty format
+        //on the json does not affect the verification.
+
+        let lic = make_license();
+        lic.save_to_file("licjson.txt");
+
+        let file = File::open("licjson.txt").unwrap();
+        let reader = BufReader::new(file);
+
+        let mut writer = &File::create("temp.txt").unwrap();
+        for line in reader.lines() {
+            let txt = line.unwrap();
+            writer.write_all(txt.as_bytes()).unwrap();
+        }
+        writer.flush().unwrap();
+
+        fs::rename("temp.txt", "licjson.txt").unwrap();
+
+        let lic_loaded = License::from_file("licjson.txt");
+        assert_eq!(lic_loaded.verify(), true);
+        let _ = fs::remove_file("licjson.txt");
     }
 
     #[test]
