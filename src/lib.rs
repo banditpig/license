@@ -1,10 +1,12 @@
 #![allow(dead_code)]
 
+mod data;
 mod license;
 
 #[cfg(test)]
 mod tests {
-    use crate::license::License;
+    // use crate::license::License;
+    use crate::data::License;
     use std::fs;
     use std::fs::File;
     use std::io::{BufRead, BufReader, Write};

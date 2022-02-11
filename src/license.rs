@@ -1,47 +1,15 @@
-use std::collections::{BTreeMap, HashMap};
+use std::collections::HashMap;
 use std::fs;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 
+use crate::data::*;
 use chrono::{DateTime, NaiveDate, Utc, MIN_DATE};
 use rand::rngs::OsRng;
 use schnorrkel::{signing_context, Keypair, PublicKey, Signature};
-use serde::{Deserialize, Serialize, Serializer};
+
 use uuid::Uuid;
-
-fn ordered_map<S>(value: &HashMap<String, String>, serializer: S) -> Result<S::Ok, S::Error>
-where
-    S: Serializer,
-{
-    let ordered: BTreeMap<_, _> = value.iter().collect();
-    ordered.serialize(serializer)
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
-#[serde_with::serde_as]
-pub struct SigningData {
-    sig_bytes: Vec<u8>,
-    pub_key: Vec<u8>,
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
-#[serde_with::serde_as]
-pub struct UserData {
-    id: String,
-    pub expires: DateTime<Utc>,
-    #[serde(serialize_with = "ordered_map")]
-    pub features: HashMap<String, String>,
-    pub max_users: usize,
-    keyphrase: String,
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
-#[serde_with::serde_as]
-pub struct License {
-    user_data: UserData,
-    signing_data: SigningData,
-}
 
 impl SigningData {
     pub fn new() -> Self {
