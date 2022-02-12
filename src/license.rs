@@ -9,7 +9,7 @@ use chrono::{DateTime, NaiveDate, Utc, MIN_DATE};
 use rand::rngs::OsRng;
 use schnorrkel::{signing_context, Keypair, PublicKey, Signature};
 
-use crate::data::LicenseError::{FileError, JSONIncorrect};
+use crate::data::LicenseError::{FileError, JSONIncorrect, SigningProblem};
 use uuid::Uuid;
 
 impl SigningData {
@@ -84,23 +84,39 @@ impl License {
             Err(msg) => Err(JSONIncorrect(msg.to_string())),
         }
     }
-    pub fn check_license(&self) -> bool {
-        if !self.verify() {
-            return false;
+    pub fn check_license(&self) -> Result<(), LicenseError> {
+        match self.verify() {
+            Ok(_) => {
+                let now = chrono::offset::Utc::now();
+                if self.user_data.expires > now {
+                    Ok(())
+                } else {
+                    Err(SigningProblem("Out of date".to_string()))
+                }
+            }
+            Err(e) => Err(e),
         }
-        let now = chrono::offset::Utc::now();
-        self.user_data.expires > now
     }
-    pub fn verify(&self) -> bool {
+    pub fn verify(&self) -> Result<(), LicenseError> {
         let byt_arr_sig: &[u8] = &self.signing_data.sig_bytes;
-        let signature = Signature::from_bytes(byt_arr_sig).unwrap();
         let byt_arr_pub_key: &[u8] = &self.signing_data.pub_key;
 
-        let public_key = PublicKey::from_bytes(byt_arr_pub_key).unwrap();
+        let signature = match Signature::from_bytes(byt_arr_sig) {
+            Ok(s) => s,
+            Err(e) => return Err(SigningProblem(e.to_string())),
+        };
+
+        let public_key = match PublicKey::from_bytes(byt_arr_pub_key) {
+            Ok(k) => k,
+            Err(e) => return Err(SigningProblem(e.to_string())),
+        };
+
         let context = signing_context(self.user_data.key_phrase.as_bytes());
         let user_data = self.user_data_to_json();
-        let res = public_key.verify(context.bytes(user_data.as_bytes()), &signature);
-        res.is_ok()
+        match public_key.verify(context.bytes(user_data.as_bytes()), &signature) {
+            Ok(_) => Ok(()),
+            Err(e) => Err(SigningProblem(e.to_string())),
+        }
     }
     pub fn build(mut self) -> Result<License, LicenseError> {
         let keypair = Keypair::generate_with(OsRng);

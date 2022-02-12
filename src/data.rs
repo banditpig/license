@@ -36,9 +36,10 @@ pub struct License {
     pub signing_data: SigningData,
 }
 
-#[derive(std::fmt::Debug, Clone)]
+#[derive(std::fmt::Debug, Clone, PartialEq, Eq)]
 pub enum LicenseError {
     DateFormat(String),
     JSONIncorrect(String),
     FileError(String),
+    SigningProblem(String),
 }

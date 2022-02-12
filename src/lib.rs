@@ -24,13 +24,13 @@ mod tests {
     #[test]
     fn check_license_expired() {
         let lic = make_early_license().unwrap();
-        assert_eq!(lic.check_license(), false);
+        assert_eq!(lic.check_license().is_err(), true);
     }
 
     #[test]
     fn check_license_not_expired() {
         let lic = make_license().unwrap();
-        assert_eq!(lic.check_license(), true);
+        assert_eq!(lic.check_license().is_err(), false);
     }
 
     #[test]
@@ -38,7 +38,7 @@ mod tests {
         let lic = make_early_license().unwrap();
         let _ = lic.save_to_file("early_lic.txt");
         let lic2 = License::from_file("early_lic.txt").unwrap();
-        assert_eq!(lic2.check_license(), false);
+        assert_eq!(lic2.check_license().is_err(), true);
         let _ = fs::remove_file("early_lic.txt");
     }
 
@@ -47,7 +47,7 @@ mod tests {
         let lic = make_license().unwrap();
         let _ = lic.save_to_file("lic2.txt");
         let lic2 = License::from_file("lic2.txt").unwrap();
-        assert_eq!(lic2.check_license(), true);
+        assert_eq!(lic2.check_license().is_err(), false);
         let _ = fs::remove_file("lic2.txt");
     }
 
@@ -57,7 +57,7 @@ mod tests {
         let _ = lic1.save_to_file("lic3.txt");
 
         let lic = License::from_file("lic3.txt").unwrap();
-        assert_eq!(lic.verify(), true);
+        assert_eq!(lic.verify().is_err(), false);
         let _ = fs::remove_file("lic3.txt");
     }
 
@@ -82,7 +82,8 @@ mod tests {
         fs::rename("temp1.txt", "licEdit.txt").unwrap();
 
         let lic_loaded = License::from_file("licEdit.txt").unwrap();
-        assert_eq!(lic_loaded.verify(), false);
+
+        assert_eq!(lic_loaded.verify().is_err(), true);
         let _ = fs::remove_file("licEdit.txt");
     }
 
@@ -107,14 +108,14 @@ mod tests {
         fs::rename("temp.txt", "licjson.txt").unwrap();
 
         let lic_loaded = License::from_file("licjson.txt").unwrap();
-        assert_eq!(lic_loaded.verify(), true);
+        assert_eq!(lic_loaded.verify().is_err(), false);
         let _ = fs::remove_file("licjson.txt");
     }
 
     #[test]
     fn verify() {
         let lic = make_license().unwrap();
-        assert_eq!(lic.verify(), true);
+        assert_eq!(lic.verify().is_err(), false);
     }
 
     #[test]
