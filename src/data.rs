@@ -39,4 +39,6 @@ pub struct License {
 #[derive(std::fmt::Debug, Clone)]
 pub enum LicenseError {
     DateFormatError(String),
+    JSONError(String),
+    FileReadError(String),
 }

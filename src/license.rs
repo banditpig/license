@@ -9,6 +9,7 @@ use chrono::{DateTime, NaiveDate, Utc, MIN_DATE};
 use rand::rngs::OsRng;
 use schnorrkel::{signing_context, Keypair, PublicKey, Signature};
 
+use crate::data::LicenseError::JSONError;
 use uuid::Uuid;
 
 impl SigningData {
@@ -76,8 +77,12 @@ impl License {
         serde_json::to_string(&self.user_data).unwrap()
     }
 
-    pub fn all_from_json(json: &str) -> License {
-        serde_json::from_str(json).expect("Unable to make License from supplied json.")
+    pub fn all_from_json(json: &str) -> Result<License, LicenseError> {
+        let lic = serde_json::from_str::<License>(json);
+        match lic {
+            Ok(l) => Ok(l),
+            Err(msg) => Err(JSONError(msg.to_string())),
+        }
     }
     pub fn check_license(&self) -> bool {
         if !self.verify() {
@@ -97,7 +102,7 @@ impl License {
         let res = public_key.verify(context.bytes(user_data.as_bytes()), &signature);
         res.is_ok()
     }
-    pub fn sign(mut self) -> License {
+    pub fn build(mut self) -> Result<License, LicenseError> {
         let keypair = Keypair::generate_with(OsRng);
         let user_data = self.user_data_to_json();
         let context = signing_context(self.user_data.key_phrase.as_bytes());
@@ -105,7 +110,7 @@ impl License {
 
         self.signing_data.sig_bytes = signature.to_bytes().to_vec();
         self.signing_data.pub_key = keypair.public.to_bytes().to_vec();
-        self
+        Ok(self)
     }
 
     pub fn save_to_file(&self, path: &str) {
@@ -118,8 +123,10 @@ impl License {
             panic!("couldn't write to {}: {}", path.display(), why)
         }
     }
-    pub fn from_file(path: &str) -> License {
-        let data = fs::read_to_string(path).expect("Problem reading file ");
-        Self::all_from_json(data.as_str())
+    pub fn from_file(path: &str) -> Result<License, LicenseError> {
+        match fs::read_to_string(path) {
+            Ok(data) => Self::all_from_json(data.as_str()),
+            Err(e) => Err(LicenseError::FileReadError(e.to_string())),
+        }
     }
 }

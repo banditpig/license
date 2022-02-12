@@ -15,7 +15,7 @@ mod tests {
     fn to_from_file() {
         let lic = make_license().unwrap();
         lic.save_to_file("lic1.txt");
-        let lic2 = License::from_file("lic1.txt");
+        let lic2 = License::from_file("lic1.txt").unwrap();
         assert_eq!(lic, lic2);
         let _ = fs::remove_file("lic1.txt");
     }
@@ -36,7 +36,7 @@ mod tests {
     fn check_license_expired_from_file() {
         let lic = make_early_license().unwrap();
         lic.save_to_file("early_lic.txt");
-        let lic2 = License::from_file("early_lic.txt");
+        let lic2 = License::from_file("early_lic.txt").unwrap();
         assert_eq!(lic2.check_license(), false);
         let _ = fs::remove_file("early_lic.txt");
     }
@@ -45,7 +45,7 @@ mod tests {
     fn check_license_not_expired_from_file() {
         let lic = make_license().unwrap();
         lic.save_to_file("lic2.txt");
-        let lic2 = License::from_file("lic2.txt");
+        let lic2 = License::from_file("lic2.txt").unwrap();
         assert_eq!(lic2.check_license(), true);
         let _ = fs::remove_file("lic2.txt");
     }
@@ -55,7 +55,7 @@ mod tests {
         let lic1 = make_license().unwrap();
         lic1.save_to_file("lic3.txt");
 
-        let lic = License::from_file("lic3.txt");
+        let lic = License::from_file("lic3.txt").unwrap();
         assert_eq!(lic.verify(), true);
         let _ = fs::remove_file("lic3.txt");
     }
@@ -80,7 +80,7 @@ mod tests {
 
         fs::rename("temp1.txt", "licEdit.txt").unwrap();
 
-        let lic_loaded = License::from_file("licEdit.txt");
+        let lic_loaded = License::from_file("licEdit.txt").unwrap();
         assert_eq!(lic_loaded.verify(), false);
         let _ = fs::remove_file("licEdit.txt");
     }
@@ -105,7 +105,7 @@ mod tests {
 
         fs::rename("temp.txt", "licjson.txt").unwrap();
 
-        let lic_loaded = License::from_file("licjson.txt");
+        let lic_loaded = License::from_file("licjson.txt").unwrap();
         assert_eq!(lic_loaded.verify(), true);
         let _ = fs::remove_file("licjson.txt");
     }
@@ -120,12 +120,12 @@ mod tests {
     fn to_from_json() {
         let lic = make_license().unwrap();
         let lic_json = lic.all_to_json();
-        let lic2 = License::all_from_json(&lic_json);
+        let lic2 = License::all_from_json(&lic_json).unwrap();
         assert_eq!(lic, lic2);
     }
 
     fn make_license() -> Result<License, LicenseError> {
-        Ok(License::new()
+        License::new()
             .with_feature("debug".to_string(), "parts1".to_string())?
             .with_feature("emails".to_string(), "email1, email2".to_string())?
             .with_feature("admin".to_string(), "fred, joe".to_string())?
@@ -133,11 +133,11 @@ mod tests {
             .with_expiry("2024-02-28")?
             .with_max_users(10)?
             .with_keyphrase("new license being made".to_string())?
-            .sign())
+            .build()
     }
 
     fn make_early_license() -> Result<License, LicenseError> {
-        Ok(License::new()
+        License::new()
             .with_feature("debug".to_string(), "parts1".to_string())?
             .with_feature("emails".to_string(), "email1, email2".to_string())?
             .with_feature("admin".to_string(), "fred, joe".to_string())?
@@ -145,6 +145,6 @@ mod tests {
             .with_expiry("2018-02-28")?
             .with_max_users(10)?
             .with_keyphrase("new license being made".to_string())?
-            .sign())
+            .build()
     }
 }
