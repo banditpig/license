@@ -43,6 +43,14 @@ impl License {
     }
 
     pub fn with_feature(mut self, key: String, val: String) -> Result<License, LicenseError> {
+        if key.is_empty() {
+            return Err(UserDataError("Empty key supplied for feature".to_string()));
+        }
+        if val.is_empty() {
+            return Err(UserDataError(
+                "Empty value supplied for feature".to_string(),
+            ));
+        }
         self.user_data.features.insert(key, val);
         Ok(self)
     }
