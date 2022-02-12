@@ -9,7 +9,7 @@ use chrono::{DateTime, NaiveDate, Utc, MIN_DATE};
 use rand::rngs::OsRng;
 use schnorrkel::{signing_context, Keypair, PublicKey, Signature};
 
-use crate::data::LicenseError::JSONError;
+use crate::data::LicenseError::{FileError, JSONIncorrect};
 use uuid::Uuid;
 
 impl SigningData {
@@ -54,7 +54,7 @@ impl License {
                 let from_utc = DateTime::<Utc>::from_utc(date.and_hms(0, 0, 0), Utc);
                 self.user_data.expires = from_utc;
             }
-            Err(msg) => return Err(LicenseError::DateFormatError(msg.to_string())),
+            Err(msg) => return Err(LicenseError::DateFormat(msg.to_string())),
         }
         Ok(self)
     }
@@ -81,7 +81,7 @@ impl License {
         let lic = serde_json::from_str::<License>(json);
         match lic {
             Ok(l) => Ok(l),
-            Err(msg) => Err(JSONError(msg.to_string())),
+            Err(msg) => Err(JSONIncorrect(msg.to_string())),
         }
     }
     pub fn check_license(&self) -> bool {
@@ -113,20 +113,21 @@ impl License {
         Ok(self)
     }
 
-    pub fn save_to_file(&self, path: &str) {
+    pub fn save_to_file(&self, path: &str) -> Result<(), LicenseError> {
         let path = Path::new(path);
         let mut file = match File::create(&path) {
-            Err(why) => panic!("couldn't create {}: {}", path.display(), why),
+            Err(e) => return Err(FileError(e.to_string())),
             Ok(file) => file,
         };
-        if let Err(why) = file.write_all(self.all_to_json().as_bytes()) {
-            panic!("couldn't write to {}: {}", path.display(), why)
+        match file.write_all(self.all_to_json().as_bytes()) {
+            Ok(_) => Ok(()),
+            Err(e) => Err(FileError(e.to_string())),
         }
     }
     pub fn from_file(path: &str) -> Result<License, LicenseError> {
         match fs::read_to_string(path) {
             Ok(data) => Self::all_from_json(data.as_str()),
-            Err(e) => Err(LicenseError::FileReadError(e.to_string())),
+            Err(e) => Err(LicenseError::FileError(e.to_string())),
         }
     }
 }
