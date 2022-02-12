@@ -42,4 +42,5 @@ pub enum LicenseError {
     JSONIncorrect(String),
     FileError(String),
     SigningProblem(String),
+    UserDataError(String),
 }

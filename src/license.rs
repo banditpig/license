@@ -4,13 +4,13 @@ use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 
-use crate::data::*;
 use chrono::{DateTime, NaiveDate, Utc, MIN_DATE};
 use rand::rngs::OsRng;
 use schnorrkel::{signing_context, Keypair, PublicKey, Signature};
-
-use crate::data::LicenseError::{FileError, JSONIncorrect, SigningProblem};
 use uuid::Uuid;
+
+use crate::data::LicenseError::{FileError, JSONIncorrect, SigningProblem, UserDataError};
+use crate::data::*;
 
 impl SigningData {
     pub fn new() -> Self {
@@ -59,14 +59,23 @@ impl License {
         Ok(self)
     }
     pub fn with_id(mut self, id: String) -> Result<License, LicenseError> {
+        if id.is_empty() {
+            return Err(UserDataError("Empty Id supplied".to_string()));
+        }
         self.user_data.id = id;
         Ok(self)
     }
     pub fn with_max_users(mut self, max_users: usize) -> Result<License, LicenseError> {
+        if max_users == 0 {
+            return Err(UserDataError("Must have at least one user".to_string()));
+        }
         self.user_data.max_users = max_users;
         Ok(self)
     }
     pub fn with_keyphrase(mut self, keyphrase: String) -> Result<License, LicenseError> {
+        if keyphrase.is_empty() {
+            return Err(UserDataError("Empty keyphrase supplied".to_string()));
+        }
         self.user_data.key_phrase = keyphrase;
         Ok(self)
     }
