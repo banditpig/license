@@ -87,12 +87,6 @@ impl License {
         self.user_data.key_phrase = keyphrase;
         Ok(self)
     }
-    pub fn all_to_json(&self) -> String {
-        serde_json::to_string_pretty(&self).unwrap()
-    }
-    pub fn user_data_to_json(&self) -> String {
-        serde_json::to_string(&self.user_data).unwrap()
-    }
 
     pub fn all_from_json(json: &str) -> Result<License, LicenseError> {
         let lic = serde_json::from_str::<License>(json);
@@ -122,7 +116,6 @@ impl License {
             Ok(s) => s,
             Err(e) => return Err(SigningProblem(e.to_string())),
         };
-
         let public_key = match PublicKey::from_bytes(byt_arr_pub_key) {
             Ok(k) => k,
             Err(e) => return Err(SigningProblem(e.to_string())),
@@ -145,7 +138,26 @@ impl License {
         self.signing_data.pub_key = keypair.public.to_bytes().to_vec();
         Ok(self)
     }
+    pub fn all_to_json(&self) -> String {
+        serde_json::to_string_pretty(&self).unwrap()
+    }
+    fn user_data_to_json(&self) -> String {
+        serde_json::to_string(&self.user_data).unwrap()
+    }
 
+    /// Saves the License to file.
+    ///
+    /// # Arguments
+    ///
+    /// * `path`:
+    ///
+    /// returns: Result<(), LicenseError>
+    ///
+    /// # Examples
+    ///
+    /// ```
+    ///
+    /// ```
     pub fn save_to_file(&self, path: &str) -> Result<(), LicenseError> {
         let path = Path::new(path);
         let mut file = match File::create(&path) {
@@ -157,6 +169,19 @@ impl License {
             Err(e) => Err(FileError(e.to_string())),
         }
     }
+    /// Reads the License from file.
+    ///
+    /// # Arguments
+    ///
+    /// * `path`:
+    ///
+    /// returns: Result<License, LicenseError>
+    ///
+    /// # Examples
+    ///
+    /// ```
+    ///
+    /// ```
     pub fn from_file(path: &str) -> Result<License, LicenseError> {
         match fs::read_to_string(path) {
             Ok(data) => Self::all_from_json(data.as_str()),

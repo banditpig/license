@@ -1,2 +1,6 @@
 /target
 Cargo.lock
+/.idea/vcs.xml
+/.idea/license.iml
+/.idea/workspace.xml
+/.idea/modules.xml

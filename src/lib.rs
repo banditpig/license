@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 
+mod cli;
 mod data;
 mod license;
 
