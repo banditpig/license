@@ -102,7 +102,7 @@ impl License {
                 if self.user_data.expires > now {
                     Ok(())
                 } else {
-                    Err(SigningProblem("Out of date".to_string()))
+                    Err(UserDataError("Out of date".to_string()))
                 }
             }
             Err(e) => Err(e),

@@ -25,7 +25,12 @@ mod tests {
     #[test]
     fn check_license_expired() {
         let lic = make_early_license().unwrap();
-        assert_eq!(lic.check_license().is_err(), true);
+        let res = lic.check_license();
+        assert_eq!(res.is_err(), true);
+        assert!(matches!(
+            res.unwrap_err(),
+            LicenseError::UserDataError { .. }
+        ));
     }
 
     #[test]
@@ -39,7 +44,13 @@ mod tests {
         let lic = make_early_license().unwrap();
         let _ = lic.save_to_file("early_lic.txt");
         let lic2 = License::from_file("early_lic.txt").unwrap();
-        assert_eq!(lic2.check_license().is_err(), true);
+
+        let res = lic2.check_license();
+        assert_eq!(res.is_err(), true);
+        assert!(matches!(
+            res.unwrap_err(),
+            LicenseError::UserDataError { .. }
+        ));
         let _ = fs::remove_file("early_lic.txt");
     }
 
@@ -84,7 +95,13 @@ mod tests {
 
         let lic_loaded = License::from_file("licEdit.txt").unwrap();
 
-        assert_eq!(lic_loaded.verify().is_err(), true);
+        let res = lic_loaded.verify();
+        assert_eq!(res.is_err(), true);
+
+        assert!(matches!(
+            res.unwrap_err(),
+            LicenseError::SigningProblem { .. }
+        ));
         let _ = fs::remove_file("licEdit.txt");
     }
 
