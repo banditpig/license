@@ -3,11 +3,10 @@ use std::fs;
 use std::fs::File;
 
 use std::io::Write;
-use std::ops::Add;
-use std::path::Path;
-// use std::time::{Duration, Instant};
 
-use chrono::{DateTime, Duration, Local, NaiveDate, NaiveDateTime, Utc, MIN_DATE};
+use std::path::Path;
+
+use chrono::{DateTime, Duration, NaiveDate, NaiveDateTime, Utc, MIN_DATE};
 use rand::rngs::OsRng;
 use schnorrkel::{signing_context, Keypair, PublicKey, Signature};
 use uuid::Uuid;
@@ -114,7 +113,9 @@ impl License {
                 if self.user_data.expires > now {
                     Ok(())
                 } else {
-                    Err(UserDataError("Out of date".to_string()))
+                    Err(UserDataError(
+                        "License has expired and is out of date.".to_string(),
+                    ))
                 }
             }
             Err(e) => Err(e),
@@ -126,18 +127,28 @@ impl License {
 
         let signature = match Signature::from_bytes(byt_arr_sig) {
             Ok(s) => s,
-            Err(e) => return Err(SigningProblem(e.to_string())),
+            Err(e) => {
+                return Err(SigningProblem(
+                    "The license file has been tampered with and is invalid.".to_string(),
+                ))
+            }
         };
         let public_key = match PublicKey::from_bytes(byt_arr_pub_key) {
             Ok(k) => k,
-            Err(e) => return Err(SigningProblem(e.to_string())),
+            Err(e) => {
+                return Err(SigningProblem(
+                    "The license file has been tampered with and is invalid.".to_string(),
+                ))
+            }
         };
 
         let context = signing_context(self.user_data.key_phrase.as_bytes());
         let user_data = self.user_data_to_json();
         match public_key.verify(context.bytes(user_data.as_bytes()), &signature) {
             Ok(_) => Ok(()),
-            Err(e) => Err(SigningProblem(e.to_string())),
+            Err(e) => Err(SigningProblem(
+                "The license file has been tampered with and is invalid.".to_string(),
+            )),
         }
     }
     pub fn build(mut self) -> Result<License, LicenseError> {

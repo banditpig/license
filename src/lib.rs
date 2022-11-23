@@ -1,8 +1,8 @@
 #![allow(dead_code)]
 
 mod cli;
-mod data;
-mod license;
+pub mod data;
+pub mod license;
 
 #[cfg(test)]
 mod tests {
