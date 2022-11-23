@@ -1,10 +1,13 @@
 use std::collections::HashMap;
 use std::fs;
 use std::fs::File;
-use std::io::Write;
-use std::path::Path;
 
-use chrono::{DateTime, NaiveDate, Utc, MIN_DATE};
+use std::io::Write;
+use std::ops::Add;
+use std::path::Path;
+// use std::time::{Duration, Instant};
+
+use chrono::{DateTime, Duration, Local, NaiveDate, NaiveDateTime, Utc, MIN_DATE};
 use rand::rngs::OsRng;
 use schnorrkel::{signing_context, Keypair, PublicKey, Signature};
 use uuid::Uuid;
@@ -55,6 +58,15 @@ impl License {
         Ok(self)
     }
 
+    //Mainly for testing.
+    pub fn with_seconds_duration(mut self, secs: i64) -> Result<License, LicenseError> {
+        let utc_now = Utc::now();
+        let now_plus = utc_now.checked_add_signed(Duration::seconds(secs)).unwrap();
+
+        self.user_data.expires = now_plus;
+
+        Ok(self)
+    }
     pub fn with_expiry(mut self, exp: &str) -> Result<License, LicenseError> {
         let naive_date = NaiveDate::parse_from_str(exp, "%Y-%m-%d");
         match naive_date {
@@ -130,6 +142,7 @@ impl License {
     }
     pub fn build(mut self) -> Result<License, LicenseError> {
         let keypair = Keypair::generate_with(OsRng);
+
         let user_data = self.user_data_to_json();
         let context = signing_context(self.user_data.key_phrase.as_bytes());
         let signature = keypair.sign(context.bytes(user_data.as_bytes()));
