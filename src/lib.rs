@@ -1,6 +1,5 @@
 #![allow(dead_code)]
 
-mod cli;
 pub mod data;
 pub mod license;
 
@@ -8,7 +7,6 @@ pub mod license;
 mod tests {
     use std::fs::File;
     use std::io::{BufRead, BufReader, Write};
-    use std::thread::Thread;
     use std::{fs, thread, time};
 
     // use crate::license::License;

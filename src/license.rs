@@ -6,7 +6,7 @@ use std::io::Write;
 
 use std::path::Path;
 
-use chrono::{DateTime, Duration, NaiveDate, NaiveDateTime, Utc, MIN_DATE};
+use chrono::{DateTime, Duration, NaiveDate, Utc, MIN_DATE};
 use rand::rngs::OsRng;
 use schnorrkel::{signing_context, Keypair, PublicKey, Signature};
 use uuid::Uuid;
@@ -141,7 +141,7 @@ impl License {
 
         let signature = match Signature::from_bytes(byt_arr_sig) {
             Ok(s) => s,
-            Err(e) => {
+            Err(_) => {
                 return Err(SigningProblem(
                     "The license file has been tampered with and is invalid.".to_string(),
                 ))
@@ -149,7 +149,7 @@ impl License {
         };
         let public_key = match PublicKey::from_bytes(byt_arr_pub_key) {
             Ok(k) => k,
-            Err(e) => {
+            Err(_) => {
                 return Err(SigningProblem(
                     "The license file has been tampered with and is invalid.".to_string(),
                 ))
@@ -160,7 +160,7 @@ impl License {
         let user_data = self.user_data_to_json();
         match public_key.verify(context.bytes(user_data.as_bytes()), &signature) {
             Ok(_) => Ok(()),
-            Err(e) => Err(SigningProblem(
+            Err(_) => Err(SigningProblem(
                 "The license file has been tampered with and is invalid.".to_string(),
             )),
         }
@@ -223,7 +223,9 @@ impl License {
     pub fn from_file(path: &str) -> Result<License, LicenseError> {
         match fs::read_to_string(path) {
             Ok(data) => Self::all_from_json(data.as_str()),
-            Err(e) => Err(LicenseError::FileError(e.to_string())),
+            Err(_) => Err(LicenseError::FileError(
+                "Unable to find/load the license file.".to_string(),
+            )),
         }
     }
 }
