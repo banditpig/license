@@ -14,6 +14,11 @@ use uuid::Uuid;
 use crate::data::LicenseError::{FileError, JSONIncorrect, SigningProblem, UserDataError};
 use crate::data::*;
 
+impl Default for SigningData {
+    fn default() -> Self {
+        SigningData::new()
+    }
+}
 impl SigningData {
     pub fn new() -> Self {
         Self {
@@ -23,6 +28,11 @@ impl SigningData {
     }
 }
 
+impl Default for UserData {
+    fn default() -> Self {
+        UserData::new()
+    }
+}
 impl UserData {
     pub fn new() -> Self {
         let guid = Uuid::new_v4();
@@ -35,7 +45,11 @@ impl UserData {
         }
     }
 }
-
+impl Default for License {
+    fn default() -> Self {
+        License::new()
+    }
+}
 impl License {
     pub fn new() -> License {
         License {
@@ -184,7 +198,7 @@ impl License {
     /// ```
     pub fn save_to_file(&self, path: &str) -> Result<(), LicenseError> {
         let path = Path::new(path);
-        let mut file = match File::create(&path) {
+        let mut file = match File::create(path) {
             Err(e) => return Err(FileError(e.to_string())),
             Ok(file) => file,
         };
