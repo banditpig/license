@@ -1,18 +1,14 @@
-use std::collections::HashMap;
-use std::fs;
-use std::fs::File;
-
-use std::io::Write;
-
-use std::path::Path;
-
+use crate::data::LicenseError::{FileError, JSONIncorrect, SigningProblem, UserDataError};
+use crate::data::*;
 use chrono::{DateTime, Duration, NaiveDate, Utc, MIN_DATE};
 use rand::rngs::OsRng;
 use schnorrkel::{signing_context, Keypair, PublicKey, Signature};
+use std::collections::HashMap;
+use std::fs;
+use std::fs::File;
+use std::io::Write;
+use std::path::Path;
 use uuid::Uuid;
-
-use crate::data::LicenseError::{FileError, JSONIncorrect, SigningProblem, UserDataError};
-use crate::data::*;
 
 impl Default for SigningData {
     fn default() -> Self {
@@ -76,6 +72,21 @@ impl License {
         let utc_now = Utc::now();
         let now_plus = utc_now.checked_add_signed(Duration::seconds(secs)).unwrap();
 
+        self.user_data.expires = now_plus;
+
+        Ok(self)
+    }
+    pub fn with_duration(mut self, d: Duration) -> Result<License, LicenseError> {
+        let utc_now = Utc::now();
+        let now_plus = utc_now.checked_add_signed(d).unwrap();
+        self.user_data.expires = now_plus;
+
+        Ok(self)
+    }
+
+    pub fn with_days_duration(mut self, days: i64) -> Result<License, LicenseError> {
+        let utc_now = Utc::now();
+        let now_plus = utc_now.checked_add_signed(Duration::days(days)).unwrap();
         self.user_data.expires = now_plus;
 
         Ok(self)
@@ -174,6 +185,7 @@ impl License {
 
         self.signing_data.sig_bytes = signature.to_bytes().to_vec();
         self.signing_data.pub_key = keypair.public.to_bytes().to_vec();
+        println!("{:?}", keypair.secret.to_bytes());
         Ok(self)
     }
     pub fn all_to_json(&self) -> String {
