@@ -74,6 +74,14 @@ mod tests {
         ));
         let _ = fs::remove_file("early_lic.txt");
     }
+    #[test]
+    fn check_features() {
+        let lic = make_license().unwrap();
+        assert_eq!(lic.has_feature("emails"), true);
+        assert_eq!(lic.has_feature("admin"), true);
+        assert_eq!(lic.has_feature("debug"), true);
+        assert_eq!(lic.has_feature("XXX"), false);
+    }
 
     #[test]
     fn check_license_not_expired_from_file() {

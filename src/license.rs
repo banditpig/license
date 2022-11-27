@@ -53,6 +53,9 @@ impl License {
             signing_data: SigningData::new(),
         }
     }
+    pub fn has_feature(&self, feature: &str) -> bool {
+        self.user_data.features.contains_key(feature)
+    }
 
     pub fn with_feature(mut self, key: String, val: String) -> Result<License, LicenseError> {
         if key.is_empty() {
